@@ -64,3 +64,35 @@ def make_panel(n_securities: int = 4, start: str = "2022-01-03", end: str = "202
     a["source_id"], b["source_id"] = "a", "b"
     a["adjustment"] = b["adjustment"] = "split"
     return {"a": a, "b": b}
+
+
+def populate_store(con, seed: int = 21) -> dict:
+    """Fill an empty store with a small synthetic two-source dataset that has
+    known defects, then run the checks. Used by tests and the dashboard smoke
+    test. Returns the dates of the planted defects."""
+    from mdq import adjust, pipeline, store
+    panel = make_panel(n_securities=3, start="2022-01-03", end="2022-12-30", seed=seed)
+    a, b = panel["a"].copy(), panel["b"].copy()
+    a["source_id"], b["source_id"] = "yahoo", "nasdaq"
+    ex = a.loc[a.security_id == "SYN2", "date"].iloc[150]
+    ev = pd.DataFrame({"security_id": ["SYN2", "SYN0"], "action_type": ["split", "dividend"],
+                       "ex_date": [ex, a.date.iloc[40]], "ratio": [4.0, np.nan],
+                       "amount": [np.nan, 0.0], "source_id": "yahoo", "details": ["4:1", ""]})
+    i = b.index[b.security_id == "SYN1"][100]
+    b.loc[i, "close"] *= 1.3                      # bad print in one source
+    j = b.index[b.security_id == "SYN0"][60]
+    b.loc[j, "open"] = b.loc[j, "high"] * 1.05    # OHLC violation
+    a["adj_close"] = a["close"]
+    ids = ["SYN0", "SYN1", "SYN2"]
+    secs = pd.DataFrame({"security_id": ids, "ticker": ids, "name": "Synthetic", "exchange": "NYSE",
+                         "asset_class": "stock", "yahoo_symbol": ids, "nasdaq_symbol": ids,
+                         "currency": "USD"})
+    store.insert(con, "securities", secs)
+    for f in (a, b):
+        store.insert(con, "prices", f)
+        sp = ev[ev.action_type == "split"]
+        store.insert(con, "prices", pd.concat([adjust.to_raw(g, sp[sp.security_id == s])
+                                               for s, g in f.groupby("security_id")]))
+    store.insert(con, "corporate_actions", ev)
+    summary = pipeline.process(con)
+    return {"summary": summary, "bad_print": b.loc[i, "date"], "ohlc": b.loc[j, "date"], "split": ex}

@@ -109,13 +109,13 @@ class CheckParams:
     benchmark validation slice (see reports/BENCHMARK.md)."""
 
     # staleness: flag runs of >= stale_min_run identical consecutive closes
-    stale_min_run: int = 3
+    stale_min_run: int = 4
     # outliers
     outlier_window: int = 63
     outlier_min_periods: int = 20
-    zscore_threshold: float = 6.0
-    mad_threshold: float = 6.0
-    iforest_threshold: float = 0.70  # anomaly score in [0, 1]
+    zscore_threshold: float = 5.0
+    mad_threshold: float = 5.0
+    iforest_threshold: float = 0.75  # anomaly score in [0, 1]
     iforest_n_estimators: int = 200
     iforest_seed: int = 7
     # corporate actions
@@ -124,7 +124,7 @@ class CheckParams:
     split_candidate_ratios: tuple = (2, 3, 4, 5, 8, 10, 15, 20, 25, 50)
     dividend_factor_tolerance: float = 0.0005
     # reconciliation
-    recon_tolerance_bps: float = 10.0
+    recon_tolerance_bps: float = 2.0
     recon_blame_margin: float = 2.0
     # zero volume is suspicious for liquid names
     zero_volume_severity: str = "warning"

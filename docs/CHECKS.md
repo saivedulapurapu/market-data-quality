@@ -52,8 +52,13 @@ With two sources there is no majority vote. Each source collects a penalty:
 - **+2 if its close lies outside the other source's bar**, measuring consistency with the other source.
 
 The source whose penalty is higher by at least `recon_blame_margin` is blamed. Otherwise the
-result is `undetermined`, which is typical for slow drift and for constant adjustment-factor
-differences.
+result is `undetermined`, which is typical for slow drift.
+
+Persistence rule: if the day's cross-source difference matches both neighbouring days'
+difference within tolerance, the mismatch is a level or adjustment-basis difference, not a bad
+print that day, and blame is forced to `undetermined`. This was added after the real CMCSA
+spin-off case (`reports/QUALITY_REPORT.md`), where per-day penalties on a constant 16 bps
+offset otherwise produced noisy blame.
 
 ## Cross-source corroboration
 

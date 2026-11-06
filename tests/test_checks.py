@@ -251,3 +251,14 @@ def test_corroborated_flags_downgraded(panel):
     assert set(mad.loc["SYN0", "severity"]) == {"info"}
     assert mad.loc[("SYN1", "b"), "severity"] in ("warning", "error")
     assert '"corroborated": true' in mad.loc[("SYN0", "a"), "details"]
+
+
+def test_reconcile_persistent_offset_is_undetermined(panel):
+    a, b = panel["a"].copy(), panel["b"].copy()
+    idx = b.index[b.security_id == "SYN2"][:150]
+    b.loc[idx, ["open", "high", "low", "close"]] *= 1.0016  # constant 16 bps basis difference
+    iss, _ = reconcile(a, b, tol_bps=2)
+    mm = iss[(iss.check_name == "recon_close_mismatch") & (iss.security_id == "SYN2")]
+    assert len(mm) > 100
+    assert mm["source_id"].isna().all()
+    assert json.loads(mm.iloc[50].details)["persistent"] is True

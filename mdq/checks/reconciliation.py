@@ -18,6 +18,11 @@ is inconsistent:
 The source whose penalty exceeds the other's by >= blame_margin is blamed.
 Otherwise the result is "undetermined" (typical for slow drift, where both
 series are smooth and within each other's ranges).
+
+Persistence rule: if the day's difference equals the previous and next
+day's difference (within tolerance), the mismatch is a level or
+adjustment-basis difference (e.g. two vendors adjusting history by different
+spin-off factors), not a bad print on that day, and blame is "undetermined".
 """
 from __future__ import annotations
 
@@ -59,6 +64,12 @@ def reconcile(a: pd.DataFrame, b: pd.DataFrame, tol_bps: float = 10.0,
     mid = (c["close_a"] + c["close_b"]) / 2
     c["diff_bps"] = (c["close_a"] - c["close_b"]) / mid * 1e4
     c["allowed_bps"] = tol_bps + 0.005 / mid * 1e4
+    # persistent difference: the day's diff matches both neighbouring days' diff
+    # (within tolerance) -> a level / adjustment-basis difference, not a bad print
+    c = c.sort_values(KEY)
+    gd = c.groupby("security_id")["diff_bps"]
+    c["persistent"] = (((c["diff_bps"] - gd.shift(1)).abs() <= c["allowed_bps"])
+                       & ((c["diff_bps"] - gd.shift(-1)).abs() <= c["allowed_bps"]))
     # a NaN close on one side is a missing_field issue, not a mismatch
     bad = c[c["diff_bps"].abs() > c["allowed_bps"]].copy()
     if len(bad):
@@ -70,12 +81,14 @@ def reconcile(a: pd.DataFrame, b: pd.DataFrame, tol_bps: float = 10.0,
                  + 2 * outside(bad["close_b"], bad["low_a"], bad["high_a"]))
         blame = np.where(pen_a - pen_b >= blame_margin, src_a,
                          np.where(pen_b - pen_a >= blame_margin, src_b, None))
+        blame = np.where(bad["persistent"].to_numpy(), None, blame)
         bad["source_id"] = blame
         bad["sev"] = np.where(bad["diff_bps"].abs() >= 100, "error", "warning")
         bad["det"] = [{"close_" + src_a: float(x), "close_" + src_b: float(y),
-                       "blame": z or "undetermined",
+                       "blame": z or "undetermined", "persistent": bool(ps),
                        "penalty_" + src_a: round(float(pa), 3), "penalty_" + src_b: round(float(pb), 3)}
-                      for x, y, z, pa, pb in zip(bad["close_a"], bad["close_b"], blame, pen_a, pen_b)]
+                      for x, y, z, ps, pa, pb in zip(bad["close_a"], bad["close_b"], blame,
+                                                     bad["persistent"], pen_a, pen_b)]
         for s, grp in bad.groupby("sev"):
             out.append(make_issues(grp, "recon_close_mismatch", s, value="diff_bps",
                                    expected="allowed_bps", details=grp["det"].tolist(),
