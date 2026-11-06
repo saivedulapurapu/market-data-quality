@@ -1,5 +1,7 @@
 # market-data-quality
 
+[![tests](https://github.com/saivedulapurapu/market-data-quality/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/saivedulapurapu/market-data-quality/actions/workflows/ci.yml)
+
 A data-quality monitoring pipeline for daily equity prices. It ingests the same securities from
 **two independent free sources**, detects and scores data-quality issues, reconciles the
 sources against each other, verifies corporate-action adjustments, and **measures its own
