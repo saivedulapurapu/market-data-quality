@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+data/raw/
+data/processed/
+*.duckdb
+*.duckdb.wal
+.streamlit/secrets.toml
+.vscode/
+.idea/

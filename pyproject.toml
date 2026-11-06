@@ -1,0 +1,15 @@
+[project]
+name = "market-data-quality"
+version = "1.0.0"
+description = "Market data quality monitoring pipeline with an injected-error benchmark"
+requires-python = ">=3.13"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.coverage.run]
+source = ["mdq"]
+omit = ["mdq/__main__.py"]
