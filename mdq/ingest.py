@@ -61,6 +61,9 @@ def build_frames(tickers: list[str] | None = None) -> dict[str, pd.DataFrame]:
             if pay is None:
                 continue
             p = parser(pay, t)
+            # keep only complete sessions inside the study window (a payload
+            # fetched during market hours carries a partial bar for today)
+            p = p[(p["date"] >= config.START_DATE) & (p["date"] <= config.END_DATE)]
             p["source_id"] = src
             p["adjustment"] = "split"
             price_frames.append(p)

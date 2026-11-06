@@ -15,7 +15,7 @@ DB_PATH = DATA_PROCESSED / "mdq.duckdb"
 REPORTS_DIR = ROOT / "reports"
 
 START_DATE = "2021-11-08"
-END_DATE = "2026-11-06"
+END_DATE = "2026-11-05"  # last complete session at fetch time (see README: partial bars)
 
 # Honest, identifying User-Agent. No browser impersonation.
 USER_AGENT = "market-data-quality/1.0 (personal research)"
@@ -125,7 +125,7 @@ class CheckParams:
     dividend_factor_tolerance: float = 0.0005
     # reconciliation
     recon_tolerance_bps: float = 10.0
-    recon_blame_ratio: float = 3.0
+    recon_blame_margin: float = 2.0
     # zero volume is suspicious for liquid names
     zero_volume_severity: str = "warning"
     extra: dict = field(default_factory=dict)
