@@ -264,8 +264,8 @@ actually corrupted:
   reversed the next day.
 - Unapplied splits: the 2 test misses both coincide with large real moves. On one ex-date the
   real return was about −20%, so the implied ratio was 0.16 instead of 0.20 and fell outside
-  the log tolerance. In the other, a rally of about +30% within the 5-session persistence
-  window broke the level-shift test.
+  the log tolerance. In the other, a real rally of about +18% within the 5-session
+  persistence window broke the level-shift test.
 - Blame works for point errors (spikes, bad bars) and is unreliable for stale runs and
   drift. Both of those produce smooth, internally consistent series, and with two sources
   there is no majority vote. Read stale-run and drift blame as "undetermined", whatever the
